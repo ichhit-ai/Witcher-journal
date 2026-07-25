@@ -21,6 +21,7 @@ import {
   playLevelUpSound,
 } from './services/soundSynth';
 import { toggleBgAudio } from './services/bgAudio';
+import { List, CheckSquare, BookOpen } from 'lucide-react';
 
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../convex/_generated/api';
@@ -55,6 +56,7 @@ export const App: React.FC = () => {
   // Screen & Navigation state
   const [isJournalOpen, setIsJournalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'QUESTS' | 'BESTIARY' | 'JOURNAL'>('QUESTS');
+  const [mobilePaneTab, setMobilePaneTab] = useState<'LIST' | 'OBJECTIVES' | 'LORE'>('LIST');
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
 
   // Data Store State
@@ -66,6 +68,11 @@ export const App: React.FC = () => {
   // Selection & Modal State
   const [selectedQuestId, setSelectedQuestId] = useState<string | null>(quests[0]?.id || null);
   const [editingQuest, setEditingQuest] = useState<Quest | null | 'NEW'>(null);
+
+  const handleSelectQuest = (questId: string) => {
+    setSelectedQuestId(questId);
+    setMobilePaneTab('OBJECTIVES');
+  };
 
   // Animations State
   const [isXpFlashing, setIsXpFlashing] = useState(false);
@@ -440,21 +447,45 @@ export const App: React.FC = () => {
           />
 
           {activeTab === 'QUESTS' && (
-            <div className="journal-body">
-              <LeftPane
-                quests={quests}
-                selectedQuestId={selectedQuestId}
-                onSelectQuest={setSelectedQuestId}
-                onOpenEditor={() => setEditingQuest('NEW')}
-                playerLevel={currentLevel}
-              />
-              <MiddlePane
-                quest={selectedQuest}
-                onToggleObjective={handleToggleObjective}
-                onEditQuest={(q) => setEditingQuest(q)}
-              />
-              <RightPane quest={selectedQuest} />
-            </div>
+            <>
+              {/* Mobile Segmented Sub-Navigation Switcher */}
+              <div className="mobile-pane-switcher">
+                <button
+                  className={`mobile-tab-btn ${mobilePaneTab === 'LIST' ? 'active' : ''}`}
+                  onClick={() => setMobilePaneTab('LIST')}
+                >
+                  <List size={14} /> QUESTS ({quests.length})
+                </button>
+                <button
+                  className={`mobile-tab-btn ${mobilePaneTab === 'OBJECTIVES' ? 'active' : ''}`}
+                  onClick={() => setMobilePaneTab('OBJECTIVES')}
+                >
+                  <CheckSquare size={14} /> OBJECTIVES
+                </button>
+                <button
+                  className={`mobile-tab-btn ${mobilePaneTab === 'LORE' ? 'active' : ''}`}
+                  onClick={() => setMobilePaneTab('LORE')}
+                >
+                  <BookOpen size={14} /> STORY
+                </button>
+              </div>
+
+              <div className={`journal-body mobile-view-${mobilePaneTab.toLowerCase()}`}>
+                <LeftPane
+                  quests={quests}
+                  selectedQuestId={selectedQuestId}
+                  onSelectQuest={handleSelectQuest}
+                  onOpenEditor={() => setEditingQuest('NEW')}
+                  playerLevel={currentLevel}
+                />
+                <MiddlePane
+                  quest={selectedQuest}
+                  onToggleObjective={handleToggleObjective}
+                  onEditQuest={(q) => setEditingQuest(q)}
+                />
+                <RightPane quest={selectedQuest} />
+              </div>
+            </>
           )}
 
           {activeTab === 'BESTIARY' && (

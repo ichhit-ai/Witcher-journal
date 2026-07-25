@@ -1325,9 +1325,78 @@
     grid-template-columns: 1fr !important;
   }
 
+  /* Mobile Segmented Sub-Navigation Switcher */
+  .mobile-pane-switcher {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    background: #08080b;
+    border-bottom: 1px solid var(--gold-hairline);
+    padding: 0.4rem 0.5rem;
+    flex-shrink: 0;
+  }
+
+  .mobile-tab-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text-dim);
+    font-family: var(--font-title);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    padding: 0.45rem 0.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .mobile-tab-btn.active {
+    background: rgba(201, 151, 79, 0.18);
+    border-color: var(--gold-primary);
+    color: var(--gold-bright);
+    box-shadow: 0 0 10px rgba(201, 151, 79, 0.2);
+  }
+
+  /* Single-Pane Tabbed View Control on Mobile */
+  .journal-body.mobile-view-list .left-pane {
+    display: flex !important;
+    max-height: 100% !important;
+    height: 100% !important;
+    width: 100% !important;
+  }
+  .journal-body.mobile-view-list .middle-pane,
+  .journal-body.mobile-view-list .right-pane {
+    display: none !important;
+  }
+
+  .journal-body.mobile-view-objectives .middle-pane {
+    display: block !important;
+    height: 100% !important;
+    width: 100% !important;
+  }
+  .journal-body.mobile-view-objectives .left-pane,
+  .journal-body.mobile-view-objectives .right-pane {
+    display: none !important;
+  }
+
+  .journal-body.mobile-view-lore .right-pane {
+    display: block !important;
+    height: 100% !important;
+    width: 100% !important;
+  }
+  .journal-body.mobile-view-lore .left-pane,
+  .journal-body.mobile-view-lore .middle-pane {
+    display: none !important;
+  }
+
   .left-pane {
     width: 100% !important;
-    max-height: 260px;
+    max-height: 100%;
     border-right: none !important;
     border-bottom: 2px solid var(--gold-hairline);
     flex-shrink: 0;
