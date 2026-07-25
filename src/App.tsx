@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
-import type { Quest, BestiaryEntry, GlossaryDoc, PlayerStats } from './types';
+import type { Quest, BestiaryEntry, GlossaryDoc, PlayerStats, NoticeEntry } from './types';
 import {
   loadQuests,
   saveQuests,
@@ -35,6 +35,9 @@ import { RightPane } from './components/RightPane';
 import { BestiaryView } from './components/BestiaryView';
 import { JournalView } from './components/JournalView';
 import { QuestEditorModal } from './components/QuestEditorModal';
+import { MeditationTimer } from './components/MeditationTimer';
+import { NoticeBoard } from './components/NoticeBoard';
+import { playMeditationChime } from './services/soundSynth';
 
 export const App: React.FC = () => {
   const { isSignedIn } = useUser();
@@ -68,10 +71,58 @@ export const App: React.FC = () => {
   // Selection & Modal State
   const [selectedQuestId, setSelectedQuestId] = useState<string | null>(quests[0]?.id || null);
   const [editingQuest, setEditingQuest] = useState<Quest | null | 'NEW'>(null);
+  const [isMeditating, setIsMeditating] = useState(false);
+  const [isNoticeBoardOpen, setIsNoticeBoardOpen] = useState(false);
+  const [notices, setNotices] = useState<NoticeEntry[]>(() => {
+    const data = localStorage.getItem('witcher_notices_v1');
+    if (!data) return [];
+    try { return JSON.parse(data); } catch { return []; }
+  });
+
+  // Persist notices
+  useEffect(() => {
+    localStorage.setItem('witcher_notices_v1', JSON.stringify(notices));
+  }, [notices]);
 
   const handleSelectQuest = (questId: string) => {
     setSelectedQuestId(questId);
     setMobilePaneTab('OBJECTIVES');
+  };
+
+  // Meditation handlers
+  const handleMeditationComplete = (minutes: number) => {
+    const focusXp = Math.round(minutes * 2);
+    playMeditationChime();
+    setStats((s) => ({ ...s, totalXp: s.totalXp + focusXp }));
+    setIsMeditating(false);
+  };
+
+  // Notice Board handlers
+  const handleAddNotice = (text: string) => {
+    const newNotice: NoticeEntry = {
+      id: `notice-${Date.now()}`,
+      text,
+      createdAt: new Date().toISOString(),
+      status: 'pending',
+    };
+    setNotices((prev) => [newNotice, ...prev]);
+  };
+
+  const handleAcceptNotice = (noticeId: string) => {
+    setNotices((prev) => prev.map((n) => n.id === noticeId ? { ...n, status: 'accepted' as const } : n));
+    const notice = notices.find((n) => n.id === noticeId);
+    if (notice) {
+      setEditingQuest('NEW');
+    }
+    setIsNoticeBoardOpen(false);
+  };
+
+  const handleDismissNotice = (noticeId: string) => {
+    setNotices((prev) => prev.map((n) => n.id === noticeId ? { ...n, status: 'dismissed' as const } : n));
+  };
+
+  const handlePinNotice = (noticeId: string) => {
+    setNotices((prev) => prev.map((n) => n.id === noticeId ? { ...n, status: n.status === 'pinned' ? 'pending' as const : 'pinned' as const } : n));
   };
 
   // Animations State
@@ -428,7 +479,30 @@ export const App: React.FC = () => {
         crowns={stats.crowns}
         completedQuestsCount={completedQuestsCount}
         totalQuestsCount={totalQuestsCount}
+        onMeditate={() => setIsMeditating(true)}
+        onOpenNoticeBoard={() => setIsNoticeBoardOpen(true)}
+        noticeCount={notices.filter((n) => n.status === 'pending' || n.status === 'pinned').length}
       />
+
+      {/* Meditation Timer Overlay */}
+      {isMeditating && (
+        <MeditationTimer
+          onComplete={handleMeditationComplete}
+          onCancel={() => setIsMeditating(false)}
+        />
+      )}
+
+      {/* Notice Board Panel */}
+      {isNoticeBoardOpen && (
+        <NoticeBoard
+          notices={notices}
+          onAddNotice={handleAddNotice}
+          onAcceptNotice={handleAcceptNotice}
+          onDismissNotice={handleDismissNotice}
+          onPinNotice={handlePinNotice}
+          onClose={() => setIsNoticeBoardOpen(false)}
+        />
+      )}
 
       {isJournalOpen && (
         <div className="journal-overlay">

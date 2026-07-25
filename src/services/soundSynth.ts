@@ -128,3 +128,40 @@ export function playLevelUpSound() {
     console.warn('Audio playback error', e);
   }
 }
+
+/**
+ * Play soothing meditation completion chime (singing bowl)
+ */
+export function playMeditationChime() {
+  try {
+    const ctx = getAudioContext();
+    const now = ctx.currentTime;
+
+    // Singing bowl harmonics: fundamental + overtones
+    const harmonics = [
+      { freq: 261.63, vol: 0.15, decay: 3.0 }, // C4
+      { freq: 523.25, vol: 0.08, decay: 2.5 }, // C5
+      { freq: 784.88, vol: 0.04, decay: 2.0 }, // G5
+    ];
+
+    harmonics.forEach(({ freq, vol, decay }) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now);
+
+      gain.gain.setValueAtTime(vol, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + decay);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + decay);
+    });
+  } catch (e) {
+    console.warn('Audio playback error', e);
+  }
+}
+

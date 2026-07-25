@@ -28,6 +28,11 @@ export interface Quest {
   sortOrder: number;
   subQuests: SubQuest[]; // Nested subquests
   objectives: Objective[]; // Top-level objectives (if no subquests, or main objectives)
+  // Recurring Quest fields
+  isRecurring?: boolean;
+  recurringFrequency?: 'daily' | 'weekly' | 'monthly';
+  streakCount?: number;
+  lastCompletedDate?: string; // ISO date string
 }
 
 export interface BestiaryEntry {
@@ -57,3 +62,11 @@ export interface PlayerStats {
   maxInventory: number;
   crowns: number;
 }
+
+export interface NoticeEntry {
+  id: string;
+  text: string;
+  createdAt: string; // ISO date string
+  status: 'pending' | 'accepted' | 'dismissed' | 'pinned';
+}
+

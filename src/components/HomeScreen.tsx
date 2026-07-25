@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Volume2, VolumeX, Shield, Sparkles, Coins, Package, MapPin, Compass } from 'lucide-react';
+import { Volume2, VolumeX, Shield, Sparkles, Coins, Package, MapPin, Compass, Flame, ScrollText } from 'lucide-react';
 import { Show, SignInButton, UserButton } from '@clerk/react';
 import type { Quest } from '../types';
 import { playClickSound } from '../services/soundSynth';
@@ -13,6 +13,9 @@ interface HomeScreenProps {
   crowns?: number;
   completedQuestsCount?: number;
   totalQuestsCount?: number;
+  onMeditate?: () => void;
+  onOpenNoticeBoard?: () => void;
+  noticeCount?: number;
 }
 
 // Atmospheric high-res Witcher-styled scenic images
@@ -33,6 +36,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   crowns = 300,
   completedQuestsCount = 0,
   totalQuestsCount = 0,
+  onMeditate,
+  onOpenNoticeBoard,
+  noticeCount = 0,
 }) => {
   const [bgIndex, setBgIndex] = useState(0);
 
@@ -185,6 +191,20 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             <span>[SPACE] TOGGLE TRACKING IN JOURNAL</span>
           </div>
         </div>
+      </div>
+
+      {/* Bottom HUD Bar: Meditate + Notice Board */}
+      <div className="hud-bottom-bar">
+        {onMeditate && (
+          <button className="hud-meditate-btn" onClick={() => { playClickSound(); onMeditate(); }}>
+            <Flame size={16} /> MEDITATE
+          </button>
+        )}
+        {onOpenNoticeBoard && (
+          <button className="hud-notice-btn" onClick={() => { playClickSound(); onOpenNoticeBoard(); }}>
+            <ScrollText size={16} /> NOTICES{noticeCount > 0 ? ` (${noticeCount})` : ''}
+          </button>
+        )}
       </div>
 
       {/* Center Main Action */}

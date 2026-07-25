@@ -89,9 +89,21 @@ export const LeftPane: React.FC<LeftPaneProps> = ({
 
                     {/* Quest info — natural case title, location-only subtitle */}
                     <div className="quest-item-info">
-                      <div className="quest-item-title">{q.title}</div>
+                      <div className="quest-item-title">
+                        {q.title}
+                        {q.isRecurring && q.streakCount != null && q.streakCount > 0 && (
+                          <span className="streak-badge" style={{ marginLeft: '0.5rem' }}>
+                            <span className="streak-fire">🔥</span>{q.streakCount}
+                          </span>
+                        )}
+                      </div>
                       <div className="quest-item-subtitle">
                         {q.locationTag.split('|')[0].trim()}
+                        {q.isRecurring && (
+                          <span className="recurring-badge" style={{ marginLeft: '0.4rem' }}>
+                            ↻ {q.recurringFrequency}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
