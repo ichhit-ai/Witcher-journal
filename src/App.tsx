@@ -129,12 +129,13 @@ export const App: React.FC = () => {
   const [isXpFlashing, setIsXpFlashing] = useState(false);
   const [isLevelPulsing, setIsLevelPulsing] = useState(false);
 
-  // Sync Convex Remote Data -> Local React State when signed in
+  // Sync Convex Remote Data <-> Local React State when signed in
   useEffect(() => {
     if (!isSignedIn) return;
     if (convexQuests !== undefined) {
       if (convexQuests.length === 0) {
-        const batch = INITIAL_QUESTS.map(q => ({
+        const batchToSave = quests.length > 0 ? quests : INITIAL_QUESTS;
+        const batch = batchToSave.map((q) => ({
           customId: q.id,
           title: q.title,
           locationTag: q.locationTag,
@@ -145,12 +146,12 @@ export const App: React.FC = () => {
           isTracked: q.isTracked,
           points: q.points,
           sortOrder: q.sortOrder,
-          subQuests: q.subQuests,
-          objectives: q.objectives,
+          subQuests: q.subQuests || [],
+          objectives: q.objectives || [],
         }));
         setQuestsBatchMutation({ quests: batch }).catch(console.error);
       } else {
-        const mapped: Quest[] = convexQuests.map(q => ({
+        const mapped: Quest[] = convexQuests.map((q) => ({
           id: q.customId,
           title: q.title,
           locationTag: q.locationTag,
@@ -161,10 +162,31 @@ export const App: React.FC = () => {
           isTracked: q.isTracked,
           points: q.points,
           sortOrder: q.sortOrder,
-          subQuests: q.subQuests,
-          objectives: q.objectives,
+          subQuests: q.subQuests || [],
+          objectives: q.objectives || [],
         }));
         setQuests(mapped);
+
+        // Upload any unsynced local quests to Convex database
+        const existingIds = new Set(convexQuests.map((q) => q.customId));
+        const unsyncedQuests = quests.filter((q) => !existingIds.has(q.id));
+        if (unsyncedQuests.length > 0) {
+          const batch = unsyncedQuests.map((q) => ({
+            customId: q.id,
+            title: q.title,
+            locationTag: q.locationTag,
+            category: q.category,
+            loreText: q.loreText,
+            suggestedLevel: q.suggestedLevel,
+            status: q.status,
+            isTracked: q.isTracked,
+            points: q.points,
+            sortOrder: q.sortOrder,
+            subQuests: q.subQuests || [],
+            objectives: q.objectives || [],
+          }));
+          setQuestsBatchMutation({ quests: batch }).catch(console.error);
+        }
       }
     }
   }, [isSignedIn, convexQuests]);
@@ -173,7 +195,8 @@ export const App: React.FC = () => {
     if (!isSignedIn) return;
     if (convexBestiary !== undefined) {
       if (convexBestiary.length === 0) {
-        const batch = INITIAL_BESTIARY.map(b => ({
+        const batchToSave = bestiary.length > 0 ? bestiary : INITIAL_BESTIARY;
+        const batch = batchToSave.map((b) => ({
           customId: b.id,
           name: b.name,
           category: b.category,
@@ -186,7 +209,7 @@ export const App: React.FC = () => {
         }));
         setBestiaryBatchMutation({ entries: batch }).catch(console.error);
       } else {
-        const mapped: BestiaryEntry[] = convexBestiary.map(b => ({
+        const mapped: BestiaryEntry[] = convexBestiary.map((b) => ({
           id: b.customId,
           name: b.name,
           category: b.category as any,
@@ -198,6 +221,23 @@ export const App: React.FC = () => {
           iconType: b.iconType,
         }));
         setBestiary(mapped);
+
+        const existingIds = new Set(convexBestiary.map((b) => b.customId));
+        const unsynced = bestiary.filter((b) => !existingIds.has(b.id));
+        if (unsynced.length > 0) {
+          const batch = unsynced.map((b) => ({
+            customId: b.id,
+            name: b.name,
+            category: b.category,
+            subtitle: b.subtitle,
+            weaknesses: b.weaknesses,
+            description: b.description,
+            tactics: b.tactics,
+            victoriesCount: b.victoriesCount,
+            iconType: b.iconType,
+          }));
+          setBestiaryBatchMutation({ entries: batch }).catch(console.error);
+        }
       }
     }
   }, [isSignedIn, convexBestiary]);
@@ -206,7 +246,8 @@ export const App: React.FC = () => {
     if (!isSignedIn) return;
     if (convexGlossary !== undefined) {
       if (convexGlossary.length === 0) {
-        const batch = INITIAL_GLOSSARY.map(g => ({
+        const batchToSave = glossary.length > 0 ? glossary : INITIAL_GLOSSARY;
+        const batch = batchToSave.map((g) => ({
           customId: g.id,
           title: g.title,
           category: g.category,
@@ -216,7 +257,7 @@ export const App: React.FC = () => {
         }));
         setGlossaryBatchMutation({ docs: batch }).catch(console.error);
       } else {
-        const mapped: GlossaryDoc[] = convexGlossary.map(g => ({
+        const mapped: GlossaryDoc[] = convexGlossary.map((g) => ({
           id: g.customId,
           title: g.title,
           category: g.category as any,
@@ -225,6 +266,20 @@ export const App: React.FC = () => {
           icon: g.icon,
         }));
         setGlossary(mapped);
+
+        const existingIds = new Set(convexGlossary.map((g) => g.customId));
+        const unsynced = glossary.filter((g) => !existingIds.has(g.id));
+        if (unsynced.length > 0) {
+          const batch = unsynced.map((g) => ({
+            customId: g.id,
+            title: g.title,
+            category: g.category,
+            content: g.content,
+            dateCreated: g.dateCreated,
+            icon: g.icon,
+          }));
+          setGlossaryBatchMutation({ docs: batch }).catch(console.error);
+        }
       }
     }
   }, [isSignedIn, convexGlossary]);
@@ -233,7 +288,7 @@ export const App: React.FC = () => {
     if (!isSignedIn) return;
     if (convexStats !== undefined) {
       if (convexStats === null) {
-        saveStatsMutation(INITIAL_STATS).catch(console.error);
+        saveStatsMutation(stats || INITIAL_STATS).catch(console.error);
       } else {
         setStats({
           totalXp: convexStats.totalXp,
